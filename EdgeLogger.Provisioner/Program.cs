@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,9 +22,14 @@ app.MapPost("/configure", async (HttpRequest request) =>
     if (string.IsNullOrWhiteSpace(ssid) || string.IsNullOrWhiteSpace(password))
         return Results.BadRequest("SSID and password required.");
 
-    // Load template
-    var templatePath = Path.Combine("Templates", "homewifi.nmconnection.template");
-    var template = await File.ReadAllTextAsync(templatePath);
+    // Load template from embedded resource
+    var assembly = Assembly.GetExecutingAssembly();
+    var resourceName = "EdgeLogger.Provisioner.Templates.basewifi.nmconnection.template";
+    await using var stream = assembly.GetManifestResourceStream(resourceName);
+    if (stream == null)
+        return Results.Problem($"Template resource not found: {resourceName}");
+    using var reader = new StreamReader(stream);
+    var template = await reader.ReadToEndAsync();
 
     // Replace placeholders
     var output = template
