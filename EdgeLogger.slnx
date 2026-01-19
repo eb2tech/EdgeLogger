@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="EdgeLogger.ApiService/EdgeLogger.ApiService.csproj" />
+  <Project Path="EdgeLogger.AppHost/EdgeLogger.AppHost.csproj" />
+  <Project Path="EdgeLogger.Provisioner/EdgeLogger.Provisioner.csproj" />
+  <Project Path="EdgeLogger.ServiceDefaults/EdgeLogger.ServiceDefaults.csproj" />
+  <Project Path="EdgeLogger.Tests/EdgeLogger.Tests.csproj" />
+  <Project Path="EdgeLogger.Web/EdgeLogger.Web.csproj" />
+</Solution>

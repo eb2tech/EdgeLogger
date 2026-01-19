@@ -1,0 +1,16 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.2">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>e847f3a7-ac41-4ae2-9e49-f66a32409ffb</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EdgeLogger.ApiService\EdgeLogger.ApiService.csproj" />
+    <ProjectReference Include="..\EdgeLogger.Web\EdgeLogger.Web.csproj" />
+  </ItemGroup>
+
+</Project>
