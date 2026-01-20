@@ -8,7 +8,7 @@ if (-Not (Test-Path $publishDir)) {
 
 Write-Host "Copying files to Raspberry Pi..."
 # ssh pi@picollect.local "sudo systemctl stop EdgeLogger.Provisioner"
-ssh pi@picollect.local "rm -rf /opt/provisioner/*"
+ssh pi@picollect.local "sudo rm -rf /opt/provisioner/*"
 scp -r "$publishDir\*" $targetDir
 ssh pi@picollect.local "sudo chmod +x /opt/provisioner/EdgeLogger.Provisioner"
 # ssh pi@picollect.local "sudo systemctl start EdgeLogger.Provisioner"

@@ -8,11 +8,7 @@
   </PropertyGroup>
 
     <ItemGroup>
-      <None Remove="Templates\basewifi.nmconnection.template" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Include="Templates\basewifi.nmconnection.template" />
+      <EmbeddedResource Include="Templates\remotewifi.nmconnection.template" />
     </ItemGroup>
 
 </Project>

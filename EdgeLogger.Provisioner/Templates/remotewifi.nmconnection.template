@@ -1,7 +1,10 @@
 [connection]
-id=homewifi
+id=remotewifi
+uuid={{UUID}}
 type=wifi
+interface-name=wlan0
 autoconnect=true
+autoconnect-priority=100
 
 [wifi]
 mode=infrastructure
