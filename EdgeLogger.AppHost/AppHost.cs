@@ -9,4 +9,6 @@ builder.AddProject<Projects.EdgeLogger_Web>("webfrontend")
     .WithReference(apiService)
     .WaitFor(apiService);
 
+builder.AddProject<Projects.EdgeLogger_Mobile>("edgelogger-mobile");
+
 builder.Build().Run();
