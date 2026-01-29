@@ -1,3 +1,8 @@
+using System.Reflection;
+using EdgeLogger.ApiService.Services;
+using NATS.Client.Core;
+using NATS.Net;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
@@ -8,6 +13,19 @@ builder.Services.AddProblemDetails();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Add services
+builder.Services.AddSingleton<NatsClient>(_ => new NatsClient(new NatsOpts
+                                                              {
+                                                                  Url = builder.Configuration["Nats:Server"]!,
+                                                                  Name = Assembly.GetExecutingAssembly().GetName().Name!,
+                                                                  AuthOpts = NatsAuthOpts.Default with
+                                                                             {
+                                                                                 Username = builder.Configuration["Nats:Username"]!,
+                                                                                 Password = builder.Configuration["Nats:Password"]!
+                                                                             }
+                                                              }));
+builder.Services.AddHostedService<AuraLogMessageHandler>();
 
 var app = builder.Build();
 

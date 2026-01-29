@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>79c5c621-055f-4f8e-8fde-161f11bec1b8</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,7 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageReference Include="NATS.Net" Version="2.7.1" />
   </ItemGroup>
 
 </Project>
