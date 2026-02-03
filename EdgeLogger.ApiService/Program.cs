@@ -2,6 +2,14 @@ using System.Reflection;
 using EdgeLogger.ApiService.Services;
 using NATS.Client.Core;
 using NATS.Net;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+             .MinimumLevel.Debug()
+             .Enrich.FromLogContext()
+             .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+             .WriteTo.Console()
+             .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +34,8 @@ builder.Services.AddSingleton<NatsClient>(_ => new NatsClient(new NatsOpts
                                                                              }
                                                               }));
 builder.Services.AddHostedService<AuraLogMessageHandler>();
+
+builder.Services.AddLogging(lb => lb.AddSerilog(dispose: true));
 
 var app = builder.Build();
 
