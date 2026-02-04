@@ -7,7 +7,7 @@ namespace EdgeLogger.ApiService.Services;
 
 public class AuraLogMessageHandler(NatsClient natsClient, ILogger<AuraLogMessageHandler> logger) : BackgroundService
 {
-    public string DatabasePath 
+    private static string DatabasePath 
     {
         get
         {
@@ -31,20 +31,27 @@ public class AuraLogMessageHandler(NatsClient natsClient, ILogger<AuraLogMessage
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await foreach (var message in natsClient.SubscribeAsync<string>("aura2.logs.>", cancellationToken: stoppingToken))
+        try
         {
-            try
+            await foreach (var message in natsClient.SubscribeAsync<string>("aura2.logs.>", cancellationToken: stoppingToken))
             {
-                var deviceName = message.Subject.Split(".")[^1];
-                var logMessage = JsonSerializer.Deserialize<AuraLogMessage>(message.Data!);
-                logger.LogDebug("Received Aura log message from {DeviceName}: {LogMessage}", deviceName, logMessage);
+                try
+                {
+                    var deviceName = message.Subject.Split(".")[^1];
+                    var logMessage = JsonSerializer.Deserialize<AuraLogMessage>(message.Data!);
+                    logger.LogDebug("Received Aura log message from {DeviceName}: {LogMessage}", deviceName, logMessage);
 
-                WriteLogMessage(deviceName, logMessage);
+                    WriteLogMessage(deviceName, logMessage);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error processing Aura log message");
+                }
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error processing Aura log message");
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            // This is expected when the service is stopping.
         }
     }
 
