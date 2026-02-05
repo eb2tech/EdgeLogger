@@ -5,7 +5,7 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace EdgeLogger.ApiService.Services;
 
-public class AuraLogMessageHandler(NatsClient natsClient, ILogger<AuraLogMessageHandler> logger) : BackgroundService
+public class AuraLogMessageService(NatsClient natsClient, ILogger<AuraLogMessageService> logger) : BackgroundService
 {
     private static string DatabasePath 
     {

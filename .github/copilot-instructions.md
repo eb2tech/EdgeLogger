@@ -122,7 +122,7 @@ The service uses multiple `BackgroundService` classes:
 - Controls LED patterns based on device state  
 - Uses sysfs or libgpiod  
 
-#### **NatsConsumerService**
+#### **AuraLogMessageService**
 - Starts only when Wi‑Fi is connected  
 - Subscribes to NATS  
 - Writes logs to local storage  

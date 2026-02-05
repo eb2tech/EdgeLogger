@@ -36,7 +36,7 @@ builder.Services.AddSingleton<NatsClient>(_ => new NatsClient(new NatsOpts
                                                                                  Password = builder.Configuration["Nats:Password"]!
                                                                              }
                                                               }));
-builder.Services.AddHostedService<AuraLogMessageHandler>();
+builder.Services.AddHostedService<AuraLogMessageService>();
 builder.Services.AddHostedService<NetworkStateMonitorService>();
 builder.Services.AddSingleton<INetworkStatus>(sp => sp.GetRequiredService<NetworkStateMonitorService>());
 
