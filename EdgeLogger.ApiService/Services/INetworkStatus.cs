@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-
-namespace EdgeLogger.ApiService.Services;
+﻿namespace EdgeLogger.ApiService.Services;
 
 internal interface INetworkStatus
 {
