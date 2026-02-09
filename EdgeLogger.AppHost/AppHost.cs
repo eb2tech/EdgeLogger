@@ -9,6 +9,8 @@ builder.AddProject<Projects.EdgeLogger_Web>("webfrontend")
     .WithReference(apiService)
     .WaitFor(apiService);
 
-builder.AddProject<Projects.EdgeLogger_Mobile>("edgelogger-mobile");
+// MAUI Mobile App - References API service for backend connectivity
+builder.AddProject<Projects.EdgeLogger_Mobile>("edgelogger-mobile")
+    .WithReference(apiService);
 
 builder.Build().Run();
