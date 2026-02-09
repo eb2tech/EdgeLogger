@@ -1,3 +1,17 @@
+using System.Reflection;
+using EdgeLogger.ApiService;
+using EdgeLogger.ApiService.Services;
+using NATS.Client.Core;
+using NATS.Net;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+             .MinimumLevel.Debug()
+             .Enrich.FromLogContext()
+             .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+             .WriteTo.Console()
+             .CreateLogger();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
@@ -9,6 +23,25 @@ builder.Services.AddProblemDetails();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddLogging(lb => lb.AddSerilog(dispose: true));
+
+// Add services
+builder.Services.AddSingleton<NatsClient>(_ => new NatsClient(new NatsOpts
+                                                              {
+                                                                  Url = builder.Configuration["Nats:Server"]!,
+                                                                  Name = Assembly.GetExecutingAssembly().GetName().Name!,
+                                                                  AuthOpts = NatsAuthOpts.Default with
+                                                                             {
+                                                                                 Username = builder.Configuration["Nats:Username"]!,
+                                                                                 Password = builder.Configuration["Nats:Password"]!
+                                                                             }
+                                                              }));
+builder.Services.AddHostedService<AuraLogMessageService>();
+builder.Services.AddHostedService<NetworkStateMonitorService>();
+builder.Services.AddHostedService<BleProvisioningService>();
+builder.Services.AddTransient<WifiConfiguratorService>();
+builder.Services.AddSingleton<INetworkStatus>(sp => sp.GetRequiredService<NetworkStateMonitorService>());
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -19,29 +52,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
-
-app.MapGet("/", () => "API service is running. Navigate to /weatherforecast to see sample data.");
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
 app.MapDefaultEndpoints();
+app.MapApiEndpoints();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
