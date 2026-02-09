@@ -39,6 +39,7 @@ builder.Services.AddSingleton<NatsClient>(_ => new NatsClient(new NatsOpts
 builder.Services.AddHostedService<AuraLogMessageService>();
 builder.Services.AddHostedService<NetworkStateMonitorService>();
 builder.Services.AddHostedService<BleProvisioningService>();
+builder.Services.AddTransient<WifiConfiguratorService>();
 builder.Services.AddSingleton<INetworkStatus>(sp => sp.GetRequiredService<NetworkStateMonitorService>());
 
 var app = builder.Build();
