@@ -12,6 +12,7 @@
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>
+		<string>bluetooth-le</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -28,5 +29,12 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	
+	<!-- Bluetooth Permission Descriptions -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>EdgeLogger needs Bluetooth access to configure your Raspberry Pi's WiFi connection via BLE.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>EdgeLogger uses Bluetooth to communicate with your Raspberry Pi for WiFi provisioning.</string>
 </dict>
 </plist>
+

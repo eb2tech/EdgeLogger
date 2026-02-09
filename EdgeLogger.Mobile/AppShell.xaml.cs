@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
+using EdgeLogger.Mobile.Pages;
 using Font = Microsoft.Maui.Font;
 namespace EdgeLogger.Mobile;
 
@@ -10,6 +11,9 @@ public partial class AppShell : Shell
 		InitializeComponent();
 		var currentTheme = Application.Current!.RequestedTheme;		
 		ThemeSegmentedControl.SelectedIndex = currentTheme == AppTheme.Light ? 0 : 1;
+
+		// Register routes for Shell navigation
+		Routing.RegisterRoute("wifi-provisioning", typeof(WiFiProvisioningPage));
 	}
 	public static async Task DisplaySnackbarAsync(string message)
 	{

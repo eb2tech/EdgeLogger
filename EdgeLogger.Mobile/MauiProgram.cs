@@ -53,6 +53,13 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ProjectListPageModel>();
 		builder.Services.AddSingleton<ManageMetaPageModel>();
 
+		// BLE Provisioning Services
+		builder.Services.AddSingleton<IBleProvisioningService, BleProvisioningService>();
+		builder.Services.AddSingleton<PiDetailsPageModel>();
+		builder.Services.AddSingleton<PiDetailsPage>();
+		builder.Services.AddSingleton<WiFiProvisioningPageModel>();
+		builder.Services.AddSingleton<WiFiProvisioningPage>();
+
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
 		

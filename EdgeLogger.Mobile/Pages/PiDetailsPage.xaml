@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pageModels="clr-namespace:EdgeLogger.Mobile.PageModels"
+             x:Class="EdgeLogger.Mobile.Pages.PiDetailsPage"
+             x:DataType="pageModels:PiDetailsPageModel"
+             Title="Pi Details">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <Label Text="EdgeLogger Pi Configuration"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <Border Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray500}}"
+                    StrokeThickness="1"
+                    Padding="20"
+                    StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="This page will contain Pi details and status information in a future update."
+                           TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}"
+                           HorizontalTextAlignment="Center" />
+
+                    <Label Text="• Device Status&#x0a;• Network Information&#x0a;• Configuration History&#x0a;• System Info"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray500}}"
+                           FontSize="14"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Configure WiFi"
+                    Command="{Binding NavigateToProvisioningCommand}"
+                    HorizontalOptions="Center"
+                    WidthRequest="200"
+                    FontAttributes="Bold" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

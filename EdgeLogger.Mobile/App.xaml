@@ -2,6 +2,7 @@
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:EdgeLogger.Mobile"
+             xmlns:converters="clr-namespace:EdgeLogger.Mobile.Converters"
              x:Class="EdgeLogger.Mobile.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -10,6 +11,10 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/AppStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Converters -->
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
+

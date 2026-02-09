@@ -26,6 +26,12 @@
         ContentTemplate="{DataTemplate pages:ManageMetaPage}"
         Route="manage" />
 
+    <ShellContent
+        Title="Pi Setup"
+        Icon="{StaticResource IconSettings}"
+        ContentTemplate="{DataTemplate pages:PiDetailsPage}"
+        Route="pi-details" />
+
     <Shell.FlyoutFooter>
         <Grid Padding="15">
             <sf:SfSegmentedControl x:Name="ThemeSegmentedControl" 
