@@ -1,4 +1,3 @@
-
 ---
 
 
@@ -120,7 +119,9 @@ The service uses multiple `BackgroundService` classes:
 
 #### **LedStatusService**
 - Controls LED patterns based on device state  
-- Uses sysfs or libgpiod  
+- Uses **sysfs** (Linux kernel LED subsystem) for Raspberry Pi Zero 2 W
+- Monitors network state changes and updates LED accordingly
+- Maps network states to specific LED patterns
 
 #### **AuraLogMessageService**
 - Starts only when Wi‑Fi is connected  
@@ -128,6 +129,46 @@ The service uses multiple `BackgroundService` classes:
 - Writes logs to local storage  
 
 Copilot should follow this modular pattern.
+
+---
+
+## **LED Control Implementation**
+
+### **Approach: Sysfs (Kernel-Managed LED Control)**
+The service uses the Linux kernel LED subsystem via sysfs file writes:
+
+- **Path**: `/sys/class/leds/led0/` or `/sys/class/leds/ACT/`
+- **Advantages**: Zero dependencies, kernel handles timing, non-blocking
+- **Trigger types**: `timer`, `heartbeat`, `mmc0` (SD card activity)
+
+### **PiIntrinsics LED Methods**
+```csharp
+PiIntrinsics.SetLedStateFastBlink()   // 100ms on/off - Disconnected
+PiIntrinsics.SetLedStateSlowBlink()   // 500ms on/off - Connecting/Disconnecting
+PiIntrinsics.SetLedStatePulse()       // Heartbeat pattern - Unknown/Error
+PiIntrinsics.SetLedStateNormal()      // Restore SD card activity - Connected
+```
+
+### **Network State → LED Pattern Mapping**
+| Network State | LED Pattern | Method | Visual |
+|---------------|-------------|--------|--------|
+| Connected (Global/Site/Local) | Normal (SD activity) | `SetLedStateNormal()` | Random blinks with SD I/O |
+| Disconnected | Fast blink | `SetLedStateFastBlink()` | ▁█▁█▁█▁█ (100ms) |
+| Connecting/Disconnecting | Slow blink | `SetLedStateSlowBlink()` | ▁▁█▁▁█▁ (500ms) |
+| Unknown/Error | Pulse | `SetLedStatePulse()` | ▁▂▄█▄▂▁ (smooth fade) |
+
+### **Sysfs Files Used**
+```
+/sys/class/leds/led0/trigger       # Pattern type (timer, heartbeat, mmc0)
+/sys/class/leds/led0/delay_on      # Milliseconds LED is on (timer mode)
+/sys/class/leds/led0/delay_off     # Milliseconds LED is off (timer mode)
+```
+
+### **Implementation Notes**
+- Auto-detects LED path (`led0` vs `ACT`) for different Pi models
+- Silently ignores errors (non-Pi systems, permission issues)
+- Requires root/sudo for sysfs write access (systemd service)
+- No background tasks needed (kernel manages timing)
 
 ---
 
@@ -190,12 +231,14 @@ Copilot should generate:
 ---
 
 ## **LED Status Patterns**
-Copilot should generate LED logic such as:
 
-- Fast blink → provisioning  
-- Slow blink → connecting  
-- Solid → connected  
-- Pulse → error  
+**Note**: This section is superseded by the detailed "LED Control Implementation" section above. For current implementation, see that section.
+
+Legacy reference (conceptual):
+- Fast blink → disconnected (100ms intervals)
+- Slow blink → connecting/disconnecting (500ms intervals)
+- Normal (SD activity) → connected
+- Pulse (heartbeat) → unknown/error
 
 ---
 
