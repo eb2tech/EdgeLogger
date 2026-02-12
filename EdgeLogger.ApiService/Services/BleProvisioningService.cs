@@ -31,6 +31,8 @@ internal class BleProvisioningService(
 
         if (!networkStatus.IsConnected)
             await BeginBleProvisioningAsync();
+
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
     private void OnNetworkStatusChanged(object? sender, NetworkState e)

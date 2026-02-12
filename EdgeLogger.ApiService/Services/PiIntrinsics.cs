@@ -61,4 +61,58 @@ public static class PiIntrinsics
 
         return isPi;
     }
+
+    public static void SetLedStateFastBlink()
+    {
+        // Fast blink: 100ms on/off
+        SetLedPattern("timer", delayOn: 100, delayOff: 100);
+    }
+
+    public static void SetLedStateSlowBlink()
+    {
+        // Slow blink: 500ms on/off
+        SetLedPattern("timer", delayOn: 500, delayOff: 500);
+    }
+
+    public static void SetLedStatePulse()
+    {
+        // Heartbeat pattern (kernel-managed pulse)
+        SetLedPattern("heartbeat");
+    }
+
+    public static void SetLedStateNormal()
+    {
+        // Restore default SD card activity trigger
+        SetLedPattern("mmc0");
+    }
+
+    private static void SetLedPattern(string trigger, int? delayOn = null, int? delayOff = null)
+    {
+        // Raspberry Pi Zero 2 W Activity LED paths
+        const string ledPath = "/sys/class/leds/led0";
+        const string ledPathAlt = "/sys/class/leds/ACT"; // Alternative path on some models
+
+        var activeLedPath = Directory.Exists(ledPath) ? ledPath : ledPathAlt;
+
+        try
+        {
+            // Set the LED trigger pattern
+            File.WriteAllText($"{activeLedPath}/trigger", trigger);
+
+            // Set timing parameters if specified (for timer trigger)
+            if (delayOn.HasValue)
+            {
+                File.WriteAllText($"{activeLedPath}/delay_on", delayOn.Value.ToString());
+            }
+
+            if (delayOff.HasValue)
+            {
+                File.WriteAllText($"{activeLedPath}/delay_off", delayOff.Value.ToString());
+            }
+        }
+        catch
+        {
+            // Silently ignore errors (not running on Pi, insufficient permissions, etc.)
+        }
+    }
 }
