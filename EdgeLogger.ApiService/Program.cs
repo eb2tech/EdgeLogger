@@ -23,7 +23,11 @@ builder.Services.AddProblemDetails();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddLogging(lb => lb.AddSerilog(dispose: true));
+builder.Services.AddLogging(lb =>
+                            {
+                                lb.ClearProviders();
+                                lb.AddSerilog(dispose: true);
+                            });
 
 // Add services
 builder.Services.AddSingleton<NatsClient>(_ => new NatsClient(new NatsOpts
