@@ -2,7 +2,7 @@
 
 namespace EdgeLogger.ApiService.Services;
 
-internal class NetworkStateMonitorService(ILogger<NetworkStateMonitorService> logger) : BackgroundService, INetworkStatus
+internal class NetworkStateMonitorService(ISetNetworkStatus networkStatus, ILogger<NetworkStateMonitorService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -17,36 +17,14 @@ internal class NetworkStateMonitorService(ILogger<NetworkStateMonitorService> lo
 
         await nm.WatchStateChangedAsync((ex, state) =>
         {
-            Status = (NetworkState)state;
-            IsConnected = MapConnectedState(Status);
-
-            logger.LogInformation(ex, "Network state changed: {Status}", Status);
-
-            StatusChanged?.Invoke(this, Status);
+            var networkState = (NetworkState)state;
+            networkStatus.SetStatus(networkState);
+            logger.LogInformation(ex, "Network state changed: {Status}", networkState);
         });
 
-        Status = await nm.GetState();
-        IsConnected = MapConnectedState(Status);
+        var networkState = await nm.GetState();
+        networkStatus.SetStatus(networkState);
 
-        logger.LogInformation("Initial network state: {Status}", Status);
-
-        return;
-
-        static bool MapConnectedState(NetworkState state)
-        {
-            return state switch
-            {
-                NetworkState.ConnectedLocal => true,
-                NetworkState.ConnectedSite => true,
-                NetworkState.ConnectedGlobal => true,
-                _ => false
-            };
-        }
+        logger.LogInformation("Initial network state: {Status}", networkState);
     }
-
-    public NetworkState Status { get; private set; } = NetworkState.Unknown;
-
-    public bool IsConnected { get; private set; }
-
-    public event EventHandler<NetworkState>? StatusChanged;
 }
