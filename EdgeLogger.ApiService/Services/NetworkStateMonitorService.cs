@@ -26,5 +26,7 @@ internal class NetworkStateMonitorService(ISetNetworkStatus networkStatus, ILogg
         networkStatus.SetStatus(networkState);
 
         logger.LogInformation("Initial network state: {Status}", networkState);
+
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 }
