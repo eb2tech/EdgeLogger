@@ -288,13 +288,13 @@ namespace EdgeLogger.ApiService.Services
         ObjectPath[]? INetworkManagerProperties.ActiveConnections
             => IsSet(NetworkManagerProperty.ActiveConnections) ? _activeConnections : null;
         ObjectPath? INetworkManagerProperties.PrimaryConnection
-            => IsSet(NetworkManagerProperty.PrimaryConnection) ? _primaryConnection : null;
+            => IsSet(NetworkManagerProperty.PrimaryConnection) ? _primaryConnection : string.Empty;
         string? INetworkManagerProperties.PrimaryConnectionType
             => IsSet(NetworkManagerProperty.PrimaryConnectionType) ? _primaryConnectionType : null;
         uint? INetworkManagerProperties.Metered
             => IsSet(NetworkManagerProperty.Metered) ? _metered : null;
         ObjectPath? INetworkManagerProperties.ActivatingConnection
-            => IsSet(NetworkManagerProperty.ActivatingConnection) ? _activatingConnection : null;
+            => IsSet(NetworkManagerProperty.ActivatingConnection) ? _activatingConnection : string.Empty;
         bool? INetworkManagerProperties.Startup
             => IsSet(NetworkManagerProperty.Startup) ? _startup : null;
         string? INetworkManagerProperties.Version
@@ -2964,15 +2964,15 @@ namespace EdgeLogger.ApiService.Services
         (uint, uint)? IDeviceProperties.StateReason
             => IsSet(DeviceProperty.StateReason) ? _stateReason : null;
         ObjectPath? IDeviceProperties.ActiveConnection
-            => IsSet(DeviceProperty.ActiveConnection) ? _activeConnection : null;
+            => IsSet(DeviceProperty.ActiveConnection) ? _activeConnection : string.Empty;
         ObjectPath? IDeviceProperties.Ip4Config
-            => IsSet(DeviceProperty.Ip4Config) ? _ip4Config : null;
+            => IsSet(DeviceProperty.Ip4Config) ? _ip4Config : string.Empty;
         ObjectPath? IDeviceProperties.Dhcp4Config
-            => IsSet(DeviceProperty.Dhcp4Config) ? _dhcp4Config : null;
+            => IsSet(DeviceProperty.Dhcp4Config) ? _dhcp4Config : string.Empty;
         ObjectPath? IDeviceProperties.Ip6Config
-            => IsSet(DeviceProperty.Ip6Config) ? _ip6Config : null;
+            => IsSet(DeviceProperty.Ip6Config) ? _ip6Config : string.Empty;
         ObjectPath? IDeviceProperties.Dhcp6Config
-            => IsSet(DeviceProperty.Dhcp6Config) ? _dhcp6Config : null;
+            => IsSet(DeviceProperty.Dhcp6Config) ? _dhcp6Config : string.Empty;
         bool? IDeviceProperties.Managed
             => IsSet(DeviceProperty.Managed) ? _managed : null;
         bool? IDeviceProperties.Autoconnect
@@ -3905,7 +3905,7 @@ namespace EdgeLogger.ApiService.Services
         ObjectPath[]? IWirelessProperties.AccessPoints
             => IsSet(WirelessProperty.AccessPoints) ? _accessPoints : null;
         ObjectPath? IWirelessProperties.ActiveAccessPoint
-            => IsSet(WirelessProperty.ActiveAccessPoint) ? _activeAccessPoint : null;
+            => IsSet(WirelessProperty.ActiveAccessPoint) ? _activeAccessPoint : string.Empty;
         uint? IWirelessProperties.WirelessCapabilities
             => IsSet(WirelessProperty.WirelessCapabilities) ? _wirelessCapabilities : null;
         long? IWirelessProperties.LastScan
@@ -4704,9 +4704,9 @@ namespace EdgeLogger.ApiService.Services
             set { _master = value; __set |= Flag(ActiveProperty.Master); }
         }
         ObjectPath? IActiveProperties.Connection
-            => IsSet(ActiveProperty.Connection) ? _connection : null;
+            => IsSet(ActiveProperty.Connection) ? _connection : string.Empty;
         ObjectPath? IActiveProperties.SpecificObject
-            => IsSet(ActiveProperty.SpecificObject) ? _specificObject : null;
+            => IsSet(ActiveProperty.SpecificObject) ? _specificObject : string.Empty;
         string? IActiveProperties.Id
             => IsSet(ActiveProperty.Id) ? _id : null;
         string? IActiveProperties.Uuid
@@ -4722,21 +4722,21 @@ namespace EdgeLogger.ApiService.Services
         bool? IActiveProperties.Default
             => IsSet(ActiveProperty.Default) ? _default : null;
         ObjectPath? IActiveProperties.Ip4Config
-            => IsSet(ActiveProperty.Ip4Config) ? _ip4Config : null;
+            => IsSet(ActiveProperty.Ip4Config) ? _ip4Config : string.Empty;
         ObjectPath? IActiveProperties.Dhcp4Config
-            => IsSet(ActiveProperty.Dhcp4Config) ? _dhcp4Config : null;
+            => IsSet(ActiveProperty.Dhcp4Config) ? _dhcp4Config : string.Empty;
         bool? IActiveProperties.Default6
             => IsSet(ActiveProperty.Default6) ? _default6 : null;
         ObjectPath? IActiveProperties.Ip6Config
-            => IsSet(ActiveProperty.Ip6Config) ? _ip6Config : null;
+            => IsSet(ActiveProperty.Ip6Config) ? _ip6Config : string.Empty;
         ObjectPath? IActiveProperties.Dhcp6Config
-            => IsSet(ActiveProperty.Dhcp6Config) ? _dhcp6Config : null;
+            => IsSet(ActiveProperty.Dhcp6Config) ? _dhcp6Config : string.Empty;
         bool? IActiveProperties.Vpn
             => IsSet(ActiveProperty.Vpn) ? _vpn : null;
         ObjectPath? IActiveProperties.Controller
-            => IsSet(ActiveProperty.Controller) ? _controller : null;
+            => IsSet(ActiveProperty.Controller) ? _controller : string.Empty;
         ObjectPath? IActiveProperties.Master
-            => IsSet(ActiveProperty.Master) ? _master : null;
+            => IsSet(ActiveProperty.Master) ? _master : string.Empty;
         bool IActiveProperties.HasConnectionChanged
             => IsSet(ActiveProperty.Connection) || IsInvalidated(ActiveProperty.Connection);
         bool IActiveProperties.HasSpecificObjectChanged
