@@ -1,0 +1,30 @@
+[Unit]
+Description=EdgeLogger Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# self-contained binary is the entrypoint
+WorkingDirectory=/opt/edgelogger
+ExecStart=/opt/edgelogger/EdgeLogger
+
+# Environment overrides
+Environment="EDGELOGGER_DATA_DIR=/var/lib/edgelogger"
+Environment="EDGELOGGER_CONFIG=/etc/edgelogger/edgelogger.json"
+
+# Ensure data directory exists and is writable
+ExecStartPre=/bin/mkdir -p /var/lib/edgelogger
+ExecStartPre=/bin/chown -R pi:pi /var/lib/edgelogger
+
+# Restart behavior
+Restart=always
+RestartSec=5
+
+# Optional: limit noisy core dumps
+# OOMPolicy=continue
+
+[Install]
+WantedBy=multi-user.target
+

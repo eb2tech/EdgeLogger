@@ -1,276 +1,114 @@
----
+# Copilot Instructions — EdgeLogger
 
-
-## **Project Overview**
-**EdgeLogger.ApiService** is a long‑running .NET service designed for **Raspberry Pi devices running Linux**. It performs three major responsibilities:
-
-1. **Provisioning**  
-   - Detects when the Pi is not connected to Wi‑Fi  
-   - Starts a **Bluetooth LE (BLE) provisioning server**  
-   - Receives Wi‑Fi credentials from a mobile app  
-   - Writes a NetworkManager `.nmconnection` file  
-   - Triggers NetworkManager to join the user’s Wi‑Fi network  
-
-2. **Device State Management**  
-   - Monitors NetworkManager state via **D‑Bus**  
-   - Exposes a simple internal state machine  
-   - Controls LED status patterns based on device state  
-   - Starts/stops provisioning services as needed  
-
-3. **NATS Log Capture**  
-   - Connects to a local NATS server  
-   - Subscribes to CYD‑generated messages  
-   - Writes logs to a local database  
-   - Runs only when the Pi has a valid network connection  
-
-The service is intended to run as a **systemd daemon** on Raspberry Pi OS (64‑bit).
+These instructions define how Copilot should understand and contribute to the EdgeLogger system.  
+They describe architecture, boundaries, conventions, and decision history.  
+For implementation details, consult the code and ADRs.
 
 ---
 
-## **Key Technologies**
+## System Overview
 
-### **1. D‑Bus (via Tmds.DBus.Protocol)**
-The service uses `Tmds.DBus.Protocol` (AOT‑friendly, no reflection) to communicate with:
+EdgeLogger is a distributed, edge‑to‑cloud logging and diagnostics platform consisting of:
 
-- **NetworkManager**  
-  - Detect Wi‑Fi connectivity  
-  - Watch state changes  
-  - Trigger connection attempts  
-  - Query device status  
+- **EdgeLogger.ApiService** — headless service running on Raspberry Pi Zero 2 W  
+- **EdgeLogger.AppHost** — Aspire host for local orchestration  
+- **EdgeLogger.Web** — Blazor web UI for configuration and visualization  
+- **EdgeLogger.Mobile** — .NET MAUI mobile app  
+- **EdgeLogger.ServiceDefaults** — shared Aspire defaults  
+- **EdgeLogger.Tests** — automated tests
 
-- **BlueZ**  
-  - BLE advertising  
-  - GATT service registration  
-  - Characteristic read/write/notify  
-
-Copilot should generate D‑Bus interfaces using the `Tmds.DBus.Protocol` style:
-
-- Raw `uint` values for enums  
-- Explicit interface definitions  
-- Async methods  
-- No reflection-based attributes  
+The system ingests data from edge devices, buffers it locally, forwards it through NATS, and exposes configuration and diagnostics through web and mobile frontends.
 
 ---
 
-### **2. BLE GATT Server (via BlueZ.NET.Server)**
-BLE provisioning is implemented using **BlueZ.NET.Server**, which provides:
+## Architectural Principles
 
-- BLE advertising  
-- GATT service creation  
-- Characteristics with read/write/notify  
-- Event handlers for provisioning commands  
+- **Clear subsystem boundaries**  
+  - ApiService handles ingestion, buffering, provisioning, and local storage.  
+  - Web and Mobile handle user interaction and visualization.  
+  - AppHost orchestrates services using Aspire.  
+  - ServiceDefaults defines shared hosting conventions.
 
-Copilot should generate:
+- **Edge‑first reliability**  
+  The Pi service must operate offline, degrade gracefully, and recover without manual intervention.
 
-- A provisioning service UUID  
-- Characteristics for SSID, password, command, and status  
-- Async handlers for write requests  
-- Notification logic for provisioning status  
+- **Message‑driven ingestion**  
+  NATS is the primary transport for logs and telemetry.
 
----
+- **Local durability**  
+  ApiService maintains a local datastore for offline buffering and replay.
 
-### **3. NetworkManager Wi‑Fi Configuration**
-Wi‑Fi provisioning uses NetworkManager’s standard `.nmconnection` files.
+- **Cross‑platform UI consistency**  
+  Web and Mobile follow shared patterns for navigation, state management, and API usage.
 
-Copilot should generate files like:
-
-```
-/etc/NetworkManager/system-connections/homewifi.nmconnection
-```
-
-With sections:
-
-```
-[connection]
-[wifi]
-[wifi-security]
-[ipv4]
-[ipv6]
-```
-
-After writing the file, the service must:
-
-- `nmcli connection reload`
-- `nmcli connection up homewifi`
-
-Or use NetworkManager D‑Bus equivalents.
+- **Small, composable modules**  
+  Prefer focused classes and functions over monolithic services.
 
 ---
 
-### **4. Background Services**
-The service uses multiple `BackgroundService` classes:
+## Code Conventions
 
-#### **NetworkStateMonitorService**
-- Watches NetworkManager state  
-- Publishes device state (Disconnected, Connecting, Connected)  
-- Starts/stops BLE provisioning  
-
-#### **BleProvisioningService**
-- Runs only when Wi‑Fi is disconnected  
-- Hosts BLE GATT server  
-- Receives credentials  
-- Calls WifiConfiguratorService  
-- Sends provisioning status notifications  
-
-#### **WifiConfiguratorService**
-- Writes `.nmconnection` files  
-- Triggers NetworkManager to connect  
-- Reports success/failure  
-
-#### **LedStatusService**
-- Controls LED patterns based on device state  
-- Uses **sysfs** (Linux kernel LED subsystem) for Raspberry Pi Zero 2 W
-- Monitors network state changes and updates LED accordingly
-- Maps network states to specific LED patterns
-
-#### **AuraLogMessageService**
-- Starts only when Wi‑Fi is connected  
-- Subscribes to NATS  
-- Writes logs to local storage  
-
-Copilot should follow this modular pattern.
+- **Language:** C# across all projects  
+- **Async:** Use async/await consistently; avoid blocking calls  
+- **Dependency Injection:** Use constructor injection; avoid service locator patterns  
+- **Logging:** Use structured logging via `ILogger<T>`  
+- **Naming:**  
+  - Services: `XyzService`  
+  - Background tasks: `XyzWorker`  
+  - Models: `XyzRecord`, `XyzDto`  
+  - Channels/queues: `xyzChannel`  
+- **Error handling:**  
+  - Fail fast on configuration errors  
+  - Fail soft on network/transient errors  
+  - Use retries with backoff where appropriate
 
 ---
 
-## **LED Control Implementation**
+## Subsystem Guidelines
 
-### **Approach: Sysfs (Kernel-Managed LED Control)**
-The service uses the Linux kernel LED subsystem via sysfs file writes:
+### ApiService (Raspberry Pi)
+- Runs as a headless background service.  
+- Uses a state machine to manage provisioning, connectivity, and ingestion.  
+- Uses NATS for message forwarding.  
+- Uses a local datastore for buffering.  
+- Must remain resilient to power loss and intermittent connectivity.
 
-- **Path**: `/sys/class/leds/led0/` or `/sys/class/leds/ACT/`
-- **Advantages**: Zero dependencies, kernel handles timing, non-blocking
-- **Trigger types**: `timer`, `heartbeat`, `mmc0` (SD card activity)
+### Web (Blazor)
+- Uses component‑based architecture.  
+- Follows existing patterns for dependency injection, routing, and state.  
+- Avoid business logic in components; prefer services.
 
-### **PiIntrinsics LED Methods**
-```csharp
-PiIntrinsics.SetLedStateFastBlink()   // 100ms on/off - Disconnected
-PiIntrinsics.SetLedStateSlowBlink()   // 500ms on/off - Connecting/Disconnecting
-PiIntrinsics.SetLedStatePulse()       // Heartbeat pattern - Unknown/Error
-PiIntrinsics.SetLedStateNormal()      // Restore SD card activity - Connected
-```
+### Mobile (MAUI)
+- Mirrors Web’s conceptual model.  
+- Uses MVVM patterns where appropriate.  
+- Shares DTOs and API contracts with Web.
 
-### **Network State → LED Pattern Mapping**
-| Network State | LED Pattern | Method | Visual |
-|---------------|-------------|--------|--------|
-| Connected (Global/Site/Local) | Normal (SD activity) | `SetLedStateNormal()` | Random blinks with SD I/O |
-| Disconnected | Fast blink | `SetLedStateFastBlink()` | ▁█▁█▁█▁█ (100ms) |
-| Connecting/Disconnecting | Slow blink | `SetLedStateSlowBlink()` | ▁▁█▁▁█▁ (500ms) |
-| Unknown/Error | Pulse | `SetLedStatePulse()` | ▁▂▄█▄▂▁ (smooth fade) |
-
-### **Sysfs Files Used**
-```
-/sys/class/leds/led0/trigger       # Pattern type (timer, heartbeat, mmc0)
-/sys/class/leds/led0/delay_on      # Milliseconds LED is on (timer mode)
-/sys/class/leds/led0/delay_off     # Milliseconds LED is off (timer mode)
-```
-
-### **Implementation Notes**
-- Auto-detects LED path (`led0` vs `ACT`) for different Pi models
-- Silently ignores errors (non-Pi systems, permission issues)
-- Requires root/sudo for sysfs write access (systemd service)
-- No background tasks needed (kernel manages timing)
+### AppHost (Aspire)
+- Defines service composition and environment configuration.  
+- Centralizes connection strings, secrets, and service wiring.
 
 ---
 
-## **Device State Model**
-Copilot should use a simple enum:
+## ADR Workflow
 
-```csharp
-public enum DeviceState
-{
-    Unknown,
-    NoWifi,
-    Provisioning,
-    Connecting,
-    Connected,
-    Error
-}
-```
+All significant architectural decisions are documented as Architecture Decision Records (ADRs) in the [architecture/adr/](architecture/adr/) directory. Always refer to these documents when making changes that affect the system structure or core technologies.
 
-NetworkManager’s raw `uint` state values map to this enum.
+Create or update an ADR when a change:
+
+- introduces a new subsystem or dependency  
+- modifies provisioning, ingestion, or storage strategy  
+- changes cross‑cutting conventions  
+- affects deployment or orchestration  
+- alters boundaries between projects  
+- introduces a one‑way‑door decision
 
 ---
 
-## **NetworkManager State Values**
-Copilot should use these values:
+## When in Doubt
 
-| Value | Meaning |
-|-------|---------|
-| 0 | Unknown |
-| 10 | Asleep |
-| 20 | Disconnected |
-| 30 | Disconnecting |
-| 40 | Connecting |
-| 50 | ConnectedLocal |
-| 60 | ConnectedSite |
-| 70 | ConnectedGlobal |
+- Maintain subsystem boundaries.  
+- Prefer explicit, readable code over clever abstractions.  
+- Follow existing patterns before introducing new ones.  
+- If a change affects multiple projects or long‑term behavior, write an ADR.
 
 ---
-
-## **BLE Provisioning GATT Model**
-
-### **Service UUID**
-```
-12345678-1234-5678-1234-56789abcdef0
-```
-
-### **Characteristics**
-| UUID | Purpose |
-|------|---------|
-| `...ef01` | SSID (write) |
-| `...ef02` | Password (write) |
-| `...ef03` | Command (“provision”) |
-| `...ef04` | Status (notify) |
-
-Copilot should generate:
-
-- Write handlers  
-- Status notifications  
-- BLE advertising logic  
-
----
-
-## **LED Status Patterns**
-
-**Note**: This section is superseded by the detailed "LED Control Implementation" section above. For current implementation, see that section.
-
-Legacy reference (conceptual):
-- Fast blink → disconnected (100ms intervals)
-- Slow blink → connecting/disconnecting (500ms intervals)
-- Normal (SD activity) → connected
-- Pulse (heartbeat) → unknown/error
-
----
-
-## **Systemd Integration**
-Copilot should generate:
-
-- A `.service` file  
-- `WantedBy=multi-user.target`  
-- `After=network-online.target`  
-
----
-
-## **Coding Style Expectations**
-Copilot should:
-
-- Use async/await everywhere  
-- Avoid reflection  
-- Use dependency injection  
-- Keep services isolated  
-- Use channels or shared state for inter-service communication  
-- Prefer D-Bus over shell commands when possible  
-- Use structured logging  
-
----
-
-## **What Copilot Should Avoid**
-- Generating Windows-specific code  
-- Using Bluetooth APIs from Windows or macOS  
-- Using reflection-based D-Bus libraries  
-- Using obsolete BlueZ wrappers  
-- Using AP-mode provisioning (BLE is primary)  
-- Writing `.nmconnection` files outside `/etc/NetworkManager/system-connections/`  
-
----
-

@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Architecture/">
+    <File Path="architecture/adr/01-use-aspire-for-orchestration.md" />
+    <File Path="architecture/adr/02-use-nats-for-ingestion.md" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".github/copilot-instructions.md" />
   </Folder>
