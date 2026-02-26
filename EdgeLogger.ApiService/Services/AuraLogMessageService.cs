@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using System.Threading.Channels;
 using LiteDB;
 using NATS.Net;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -29,7 +30,17 @@ public class AuraLogMessageService(NatsClient natsClient, ILogger<AuraLogMessage
         }
     }
 
+    private readonly Channel<Tuple<string, AuraLogMessage>> logChannel = Channel.CreateUnbounded<Tuple<string, AuraLogMessage>>();
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var consumeTask = Task.Run(() => ConsumeNats(stoppingToken), stoppingToken);
+        var processTask = Task.Run(() => ConsumeChannel(stoppingToken), stoppingToken);
+
+        await Task.WhenAll(consumeTask, processTask);
+    }
+
+    private async Task ConsumeNats(CancellationToken stoppingToken)
     {
         try
         {
@@ -41,7 +52,8 @@ public class AuraLogMessageService(NatsClient natsClient, ILogger<AuraLogMessage
                     var logMessage = JsonSerializer.Deserialize<AuraLogMessage>(message.Data!);
                     logger.LogDebug("Received Aura log message from {DeviceName}: {LogMessage}", deviceName, logMessage);
 
-                    WriteLogMessage(deviceName, logMessage);
+                    if (logMessage is not null)
+                        await logChannel.Writer.WriteAsync(Tuple.Create(deviceName, logMessage), stoppingToken);
                 }
                 catch (Exception ex)
                 {
@@ -55,21 +67,38 @@ public class AuraLogMessageService(NatsClient natsClient, ILogger<AuraLogMessage
         }
     }
 
-    private void WriteLogMessage(string deviceName, AuraLogMessage? logMessage)
+    private async Task ConsumeChannel(CancellationToken stoppingToken)
     {
-        if (logMessage is null) return;
+        try
+        {
+            while (await logChannel.Reader.WaitToReadAsync(stoppingToken))
+            {
+                var batch = new List<Tuple<string, AuraLogMessage>>();
+                while (batch.Count < 50 && logChannel.Reader.TryRead(out var item))
+                {
+                    batch.Add(item);
+                }
 
-        var logStore = new AuraLogStore(
-            Timestamp: DateTimeOffset.FromUnixTimeSeconds(logMessage.Timestamp).UtcDateTime,
-            Message: logMessage.Message,
-            DeviceName: deviceName
-        );
+                if (batch.Any())
+                {
+                    var storeBatch = batch.Select(t => new AuraLogStore(
+                                                      Timestamp: DateTimeOffset.FromUnixTimeSeconds(t.Item2.Timestamp).UtcDateTime,
+                                                      Message: t.Item2.Message,
+                                                      DeviceName: t.Item1))
+                                          .ToList();
+                
+                    using var db = new LiteDatabase(DatabasePath);
+                    var collection = db.GetCollection<AuraLogStore>("AuraLogs");
+                    collection.EnsureIndex(x => x.DeviceName);
 
-        using var db = new LiteDatabase(DatabasePath);
-        var collection = db.GetCollection<AuraLogStore>("AuraLogs");
-        collection.EnsureIndex(x => x.DeviceName);
-
-        collection.Insert(logStore);
+                    collection.InsertBulk(storeBatch);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // This is expected when the service is stopping.
+        }
     }
 }
 
