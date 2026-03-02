@@ -8,7 +8,7 @@ Type=simple
 
 # self-contained binary is the entrypoint
 WorkingDirectory=/opt/edgelogger
-ExecStart=/opt/edgelogger/EdgeLogger
+ExecStart=/opt/edgelogger/EdgeLogger.ApiService
 
 # Environment overrides
 Environment="EDGELOGGER_DATA_DIR=/var/lib/edgelogger"

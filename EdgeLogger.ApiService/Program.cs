@@ -42,7 +42,8 @@ builder.Services.AddSingleton<NatsClient>(_ => new NatsClient(new NatsOpts
                                                               }));
 builder.Services.AddHostedService<AuraLogMessageService>();
 builder.Services.AddHostedService<NetworkStateMonitorService>();
-builder.Services.AddHostedService<BleProvisioningService>();
+// BLE provisioning is currently disabled. Using balena Wifi Connect for provisioning instead, which provides a better user experience. No need for a mobile app.
+// builder.Services.AddHostedService<BleProvisioningService>();
 builder.Services.AddHostedService<LedStatusService>();
 builder.Services.AddTransient<IWifiConfigurator, WifiConfiguratorService>();
 builder.Services.AddSingleton<NetworkStatus>();

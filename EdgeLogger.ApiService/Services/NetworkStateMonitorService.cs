@@ -13,6 +13,7 @@ internal class NetworkStateMonitorService(ISetNetworkStatus networkStatus, ILogg
         }
 
         using var connection = new DBusConnection(DBusAddress.System!);
+        await connection.ConnectAsync();
         var nm = new NetworkManager(connection, "org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager");
 
         await nm.WatchStateChangedAsync((ex, state) =>
